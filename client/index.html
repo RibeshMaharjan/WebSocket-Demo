@@ -11,21 +11,30 @@
 
     .container {
         margin: 10px;
+        display: flex;
+        gap: 20px;
     }
 </style>
 </head>
 <body>
   <h1>WebSocket Example</h1>
   <div class="container">
-      <label>Send Message to Server:</label> <br><br>
-      <input type="text" id="messageInput">
-      <button onclick="sendMessage()">Send</button>
-      <div id="output"></div>
+      <div>
+        <label for="messageInput">Send Message to Server:</label> <br><br>
+        <label for="recipientId">Recipient ID:</label>
+        <input type="text" id="recipientId"><br><br>
+        <label for="messageInput">Message:</label>
+        <input type="text" id="messageInput"><br><br>
+        <button onclick="sendMessage()">Send</button>
+        <div id="output"></div>
+      </div>
   </div>
+    
   <script>
 
     const outputDOM = document.getElementById('output');
     const input = document.querySelector('#messageInput');
+    const recipientId = document.querySelector('#recipientId');
     const socket = new WebSocket('ws://localhost:8080');
 
     function showMessage(message) {
@@ -34,32 +43,71 @@
       outputDOM.innerHTML += `<br>${message}<br>`;
     }
 
-    function sendMessage() {
-      const message = input?.value;
+    function sendPrivateMessage() {
+      const message = privatemessage?.value;
 
       if(!message) return;
 
-      socket.send(message);
-      showMessage(`\nSent: ${message}`);
+      const msg = {
+        type: 'private',
+        recipientId: recipient,
+        message: message
+      };
+
+      console.log(msg);
+      
+
+      // socket.send(msg);
+      sendPrivateMessage(`\nSent: ${message}`);
+    }
+
+    function sendMessage() {
+      const recipient = recipientId?.value;
+      const msg = input?.value;
+
+      if(!msg) return;
+      
+      const message = {
+        type: 'public',
+        content: msg,
+      }
+
+      if(recipient) {
+        message.type = 'private';
+        message.recipientId = recipient;
+      }
+
+      socket.send(JSON.stringify(message));
+      showMessage(`\nSent: ${message.content}`);
     }
 
     socket.onopen = function() {
-      console.log('You are connected!');
+      // console.log('You are connected!');
       
-      socket.send("Hey Server");
+      showMessage(`You are connected!`);
+      // socket
+      // socket.addEventListener('privateChat', () => {
+
+      //   sendMessage(`Server: ${"hello"}`);
+      // });
+      // socket.emit();
+      // socket.send("Hey Server");
+      
+      socket.onmessage = function({ data }) {
+        showMessage(`Server: ${data}`);
+      }
+      
+      socket.onclose = function() {
+        showMessage(`You are disconnected!`);
+        // console.log('You are disconnected!');
+      }
+
     };
 
-    socket.onmessage = function({ data }) {
-      showMessage(`Server: ${data}`);
-    }
-    
-    socket.onclose = function() {
-      console.log('You are disconnected!');
-    }
     
     socket.onerror = function(error) {
-      console.log('Error: ', error);
-      
+      showMessage(`Connection Failed`);
+      // console.log('Error: ', error);
     }
   </script>
 </body>

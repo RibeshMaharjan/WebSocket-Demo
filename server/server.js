@@ -1,4 +1,5 @@
 // http server
+const { log } = require('console');
 const http = require('http');
 
 // WebSocket Server
@@ -35,23 +36,42 @@ httpServer.on('upgrade', (req, socket, head) => {
     webSocketServer.emit('connection', ws, req);
   });
 
-  
 });
 
+
+webSocketServer.getUniqueID = function() {
+  function s4() {
+    return Math.floor((1 + Math.random())  * 0x10000).toString(16).substring(1);
+  }
+
+  return s4() + s4() + '-' + s4();
+};
 
 webSocketServer.on('connection', (ws, req) => {
   ws.on('error', onSocketPostError);
   console.log('Client connected');
+  ws.id = webSocketServer.getUniqueID();
+
+  ws.send(ws.id);
   
   // receive client message
-  ws.on('message', (message, isBinary) => {
+  ws.on('message', (msg, isBinary) => {
+
+    const message = JSON.parse(msg);
+
     // pass msg to all the users in server
     webSocketServer.clients.forEach(client => {
-      if(client.readyState === WebSocket.OPEN) {
-        client.send(message, { binary: isBinary });
+      if(client === ws || client.readyState !== WebSocket.OPEN) return;
+
+      if(message.type === 'public') {
+        client.send(message.content, { binary: isBinary });
       }
+      
+      if(message.type === 'private' && client.id === message.recipientId) {
+        client.send(message.content, { binary: isBinary });
+        return;
+      } 
     })
-    
   });
 
   ws.on('close', () => {
