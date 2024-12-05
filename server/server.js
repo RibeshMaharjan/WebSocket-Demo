@@ -1,19 +1,42 @@
+// http server
 const { log } = require('console');
-const WebSocket = require('ws');
-const wss = new WebSocket.Server({ port: 8080 });
+const http = require('http'); 
 
-wss.on('connection', ws => {
-  console.log('Client connected!');
+// WebSocket Server
+const WebSocketServer = require('websocket').server; 
+let connection = null;
 
-  ws.on('message', message => {
-    console.log(`Received from Client: ${message}`);
 
-    ws.send('Heyy CLient');
-  })
+const httpServer = http.createServer((request, response) => {
+  console.log("We have received a request");
+});
+
+const webSocket = new WebSocketServer({
+  "httpServer": httpServer
+});
+
+webSocket.on('request', request => {
   
-  ws.on('close', () => {
-    console.log('Client disconnected!');
-  })
+  connection = request.accept(null, request.origin);
+  
+  console.log('Client connected!');
+  
+  connection.on('open', () => console.log('Opened!!'));
+
+  connection.on('close', () => {
+    console.log('Client disconnected!!')
+  });
+
+  connection.on('message', (message) => {
+    console.log(`Received message: ${message.utf8Data}`);
+    connection.send('Hey Client');
+  });
+}) 
+
+
+httpServer.listen(8080, () => {
+  console.log("Server is listening to port 8080");
+  
 })
 
 
