@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=\, initial-scale=1.0">
-  <title>Document</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Socket Demo</title>
   <style>
     h1 {
         color: green;
@@ -23,7 +23,25 @@
       <div id="output"></div>
   </div>
   <script>
+
+    const outputDOM = document.getElementById('output');
+    const input = document.querySelector('#messageInput');
     const socket = new WebSocket('ws://localhost:8080');
+
+    function showMessage(message) {
+      if(!message) return;
+
+      outputDOM.innerHTML += `<br>${message}<br>`;
+    }
+
+    function sendMessage() {
+      const message = input?.value;
+
+      if(!message) return;
+
+      socket.send(message);
+      showMessage(`\nSent: ${message}`);
+    }
 
     socket.onopen = function() {
       console.log('You are connected!');
@@ -31,9 +49,8 @@
       socket.send("Hey Server");
     };
 
-    socket.onmessage = function({data}) {
-      console.log(`Data received from server: ${data}`);
-      
+    socket.onmessage = function({ data }) {
+      showMessage(`Server: ${data}`);
     }
     
     socket.onclose = function() {
