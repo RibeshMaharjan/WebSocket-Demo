@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=\, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    h1 {
+        color: green;
+    }
+
+    .container {
+        margin: 10px;
+    }
+</style>
+</head>
+<body>
+  <h1>WebSocket Example</h1>
+  <div class="container">
+      <label>Send Message to Server:</label> <br><br>
+      <input type="text" id="messageInput">
+      <button onclick="sendMessage()">Send</button>
+      <div id="output"></div>
+  </div>
+  <script>
+    const socket = new WebSocket('ws://localhost:8080');
+
+    socket.onopen = function() {
+      console.log('You are connected!');
+      
+      socket.send("Hey Server");
+    };
+
+    socket.onmessage = function({ data }) {
+      console.log(`Data received from server: ${data}`);
+      
+    }
+    
+    socket.onclose = function() {
+      console.log('You are disconnected!');
+    }
+    
+    socket.onerror = function(error) {
+      console.log('Error: ', error);
+      
+    }
+  </script>
+</body>
+</html>
